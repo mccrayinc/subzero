@@ -1,3 +1,7 @@
+# USAGE:
+#   docker build -t subzero .
+#   docker run -t -p 32366:32366 --name subzero subzero
+
 FROM centos:7
 
 RUN yum -y install \
@@ -26,20 +30,16 @@ RUN mkdir protobuf && \
     ldconfig && \
     cd python && python setup.py install
 
-# Add nCipher tools, which unpack to /opt/nfast
-WORKDIR /
-RUN curl -sSL https://<insert your local url to ncipher-tools>/gccsrc-ppcdev_12.20.51.tar.gz | \
-    tar -xz && \
-    curl -sSL https://<insert your local url to ncipher-tools>/csd-agg_12.20.51.tar.gz | \
-    tar -xz
-
-ADD . /subzero
+ADD CMakeLists.txt /subzero/CMakeLists.txt
+ADD include /subzero/include
+ADD nanopb /subzero/nanopb
+ADD proto /subzero/proto
+ADD src /subzero/src
+ADD trezor-crypto /subzero/trezor-crypto
 
 WORKDIR /subzero
 
-RUN mkdir /build && cd /build && CURRENCY=btc-testnet cmake /subzero && make
-
-RUN mkdir /crossbuild && cd /crossbuild && TARGET=nCipher CURRENCY=btc-testnet cmake /subzero && make
+RUN mkdir /build && cd /build && TARGET=dev CURRENCY=btc-testnet cmake /subzero && make
 
 EXPOSE 32366
 
